@@ -22,15 +22,14 @@ func Crawl(url string, depth int, fetcher Fetcher) {
 
 	var crawler func(string, int, Fetcher)
 	crawler = func(url string, depth int, fetcher Fetcher) {
+		defer wg.Done()
 		if depth <= 0 {
-			wg.Done()
 			return
 		}
 
 		body, urls, err := fetcher.Fetch(url)
 		if err != nil {
 			fmt.Println(err)
-			wg.Done()
 			return
 		}
 
@@ -40,7 +39,6 @@ func Crawl(url string, depth int, fetcher Fetcher) {
 			wg.Add(1)
 			go crawler(u, depth-1, fetcher)
 		}
-		wg.Done()
 	}
 	wg.Add(1)
 	go crawler(url, depth, fetcher)
