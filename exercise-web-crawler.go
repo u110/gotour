@@ -5,10 +5,36 @@ import (
 	"sync"
 )
 
+// Fetcher ...
 type Fetcher interface {
 	// Fetch returns the body of URL and
 	// a slice of URLs found on that page.
 	Fetch(url string) (body string, urls []string, err error)
+}
+
+// FetchedUrls ...
+type FetchedUrls struct {
+	mux  sync.Mutex
+	urls []string
+}
+
+// Set ...
+func (c *FetchedUrls) Set(url string) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	c.urls = append(c.urls, url)
+}
+
+// IsCached ...
+func (c *FetchedUrls) IsCached(url string) (bool, error) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	for _, u := range c.urls {
+		if u == url {
+			return true, fmt.Errorf("already fetched. url: %s", url)
+		}
+	}
+	return false, nil
 }
 
 // Crawl uses fetcher to recursively crawl
@@ -20,6 +46,8 @@ func Crawl(url string, depth int, fetcher Fetcher) {
 
 	var wg sync.WaitGroup
 
+	cache := FetchedUrls{}
+
 	var crawler func(string, int, Fetcher)
 	crawler = func(url string, depth int, fetcher Fetcher) {
 		defer wg.Done()
@@ -27,9 +55,15 @@ func Crawl(url string, depth int, fetcher Fetcher) {
 			return
 		}
 
+		_, err := cache.IsCached(url)
+		if err != nil {
+			fmt.Println("\t", err)
+			return
+		}
+		cache.Set(url)
 		body, urls, err := fetcher.Fetch(url)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("\t", err)
 			return
 		}
 
