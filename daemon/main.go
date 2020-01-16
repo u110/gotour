@@ -3,39 +3,20 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/u110/gotour/daemon/counter"
 	"io"
 	"log"
 	"net/http"
 	"strconv"
-	"sync"
 )
 
-type SafeCounter struct {
-	v   map[string]int
-	mux sync.Mutex
-}
-
-// Inc increments the counter for the given key.
-func (c *SafeCounter) Inc(key string) {
-	c.mux.Lock()
-	// Lock so only one goroutine at a time can access the map c.v.
-	c.v[key]++
-	c.mux.Unlock()
-}
-
-// Value returns the current value of the counter for the given key.
-func (c *SafeCounter) Value(key string) int {
-	c.mux.Lock()
-	// Lock so only one goroutine at a time can access the map c.v.
-	defer c.mux.Unlock()
-	return c.v[key]
-}
+var cnt = counter.SafeCounter{V: make(map[string]int)}
 
 func main() {
-	counter := SafeCounter{v: make(map[string]int)}
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		helloHandler(w, r, counter)
-	})
+	http.HandleFunc("/", helloHandler)
+	// GET /jobs/
+	// POST /job/
+	// GET /job/1
 	http.ListenAndServe(":8080", nil)
 }
 
@@ -70,10 +51,10 @@ type User struct {
 	Age  int    `json:"age"`
 }
 
-func helloHandler(w http.ResponseWriter, req *http.Request, counter SafeCounter) {
+func helloHandler(w http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case http.MethodGet:
-		user := User{Name: "Taro", Age: counter.Value("age")}
+		user := User{Name: "Taro", Age: cnt.Value("age")}
 		res, err := json.Marshal(user)
 		if err != nil {
 			log.Print("😇json marshal error.")
@@ -110,8 +91,8 @@ func helloHandler(w http.ResponseWriter, req *http.Request, counter SafeCounter)
 		}
 
 		err = json.Unmarshal(buffer, &user)
-		counter.Inc("age")
-		user.Age = counter.Value("age")
+		cnt.Inc("age")
+		user.Age = cnt.Value("age")
 		if err != nil {
 			log.Print("😇Json Unmarshal Error ")
 		}
