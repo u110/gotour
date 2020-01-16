@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/labstack/echo/v4"
 	"github.com/u110/gotour/daemon/counter"
 	"io"
 	"log"
@@ -10,14 +11,32 @@ import (
 	"strconv"
 )
 
+type User struct {
+	Name string `json:"name"`
+	Age  int    `json:"age"`
+}
+
 var cnt = counter.SafeCounter{V: make(map[string]int)}
 
 func main() {
-	http.HandleFunc("/", helloHandler)
-	// GET /jobs/
-	// POST /job/
-	// GET /job/1
-	http.ListenAndServe(":8080", nil)
+
+	e := echo.New()
+	e.GET("/", func(c echo.Context) error {
+		user := User{Name: "Taro", Age: cnt.Value("age")}
+		return c.JSON(http.StatusCreated, user)
+	})
+
+	e.POST("/", func(c echo.Context) error {
+		user := new(User)
+		if err := c.Bind(user); err != nil {
+			return err
+		}
+		cnt.Inc("age")
+		user.Age = cnt.Value("age")
+		return c.JSON(http.StatusCreated, user)
+	})
+
+	e.Logger.Fatal(e.Start(":8080"))
 }
 
 func handleParams(w http.ResponseWriter, r *http.Request) {
@@ -44,11 +63,6 @@ func handleParams(w http.ResponseWriter, r *http.Request) {
 
 	form = r.PostForm
 	fmt.Fprintf(w, "Age：\n%v\n", form)
-}
-
-type User struct {
-	Name string `json:"name"`
-	Age  int    `json:"age"`
 }
 
 func helloHandler(w http.ResponseWriter, req *http.Request) {
