@@ -1,4 +1,4 @@
-package main
+package bubble
 
 import (
 	"fmt"
@@ -10,10 +10,8 @@ func Swap(arr *[]int, i int, j int) {
 	(*arr)[i], (*arr)[j] = (*arr)[j], (*arr)[i]
 }
 
-func Init() []int {
+func Init(maxLen int, maxNum int) []int {
 	rand.Seed(time.Now().UnixNano())
-	maxLen := 30
-	maxNum := 200
 	count := 0
 
 	arr := make([]int, maxLen)
@@ -39,11 +37,8 @@ func Show(arr []int) {
 	}
 }
 
-func main() {
-	fmt.Println("start")
-	arr := Init()
-	Show(arr)
-
+func Bubblesort(dat *[]int) {
+	arr := *dat
 	doneIdx := len(arr)
 	for doneIdx > 0 {
 		// fmt.Println("doneIdx", doneIdx)
@@ -52,15 +47,23 @@ func main() {
 			// fmt.Println(i, arr[i], i+1, arr[i+1])
 			if arr[i] > arr[i+1] {
 				Swap(&arr, i, i+1)
-				Show(arr)
-				fmt.Println("donIdx", doneIdx)
-				time.Sleep(time.Duration(100) * time.Millisecond)
+				// Show(arr)
+				// fmt.Println("donIdx", doneIdx)
+				// time.Sleep(time.Duration(100) * time.Millisecond)
 			}
 			i++
 		}
 		doneIdx--
 	}
+}
 
-	Show(arr)
+func main() {
+	fmt.Println("start")
+	arr := Init(30, 300)
+	//Show(arr)
+	fmt.Println(arr)
+	Bubblesort(&arr)
+	// Show(arr)
 	fmt.Println("end")
+	fmt.Println(arr)
 }
