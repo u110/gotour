@@ -2,26 +2,10 @@ package bubble
 
 import (
 	"fmt"
-	"math/rand"
-	"time"
 )
 
 func Swap(arr *[]int, i int, j int) {
 	(*arr)[i], (*arr)[j] = (*arr)[j], (*arr)[i]
-}
-
-func Init(maxLen int, maxNum int) []int {
-	rand.Seed(time.Now().UnixNano())
-	count := 0
-
-	arr := make([]int, maxLen)
-	// initialize data
-	for count < maxLen {
-		arr[count] = rand.Intn(maxNum)
-		count++
-	}
-
-	return arr
 }
 
 func Show(arr []int) {
@@ -55,15 +39,4 @@ func Bubblesort(dat *[]int) {
 		}
 		doneIdx--
 	}
-}
-
-func main() {
-	fmt.Println("start")
-	arr := Init(30, 300)
-	//Show(arr)
-	fmt.Println(arr)
-	Bubblesort(&arr)
-	// Show(arr)
-	fmt.Println("end")
-	fmt.Println(arr)
 }
